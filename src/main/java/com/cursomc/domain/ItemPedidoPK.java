@@ -11,8 +11,6 @@ import javax.persistence.ManyToOne;
  * 
  * @author daiane
  */
-// A anotação @Embeddable serve para identificar a classe como um subtipo para o
-// JPA
 @Embeddable
 public class ItemPedidoPK implements Serializable {
 

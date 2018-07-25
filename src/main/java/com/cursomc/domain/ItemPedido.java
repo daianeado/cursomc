@@ -5,6 +5,8 @@ import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Classe de associação de Produto e Pedido
  * 
@@ -15,8 +17,8 @@ public class ItemPedido implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	// Anotação pra declarar um id embutido em um tipo auxiliar
 	@EmbeddedId
+	@JsonIgnore
 	private ItemPedidoPK id = new ItemPedidoPK();
 
 	private Double desconto;
@@ -35,8 +37,7 @@ public class ItemPedido implements Serializable {
 		this.preco = preco;
 	}
 
-	// Esses metodos existem para que seja possível ter acesso ao Pedido e Produto
-	// direto sem necessidade de acessar o ItemPedidoPK
+	@JsonIgnore
 	public Pedido getPedido() {
 		return id.getPedido();
 	}
