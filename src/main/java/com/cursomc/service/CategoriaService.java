@@ -18,7 +18,8 @@ public interface CategoriaService {
 	public void delete(Integer id);
 
 	public List<CategoriaDTO> findAll();
-	
+
 	public Page<CategoriaDTO> findPage(Integer page, Integer linesPerPage, String orderBy, String direction);
-	
+
+	public Categoria fromDTO(CategoriaDTO categoriaDTO);
 }

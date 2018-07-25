@@ -69,4 +69,9 @@ public class CategoriaServiceImpl implements CategoriaService {
 		return categoriaRepository.findAll(pageRequest).map(categoria -> new CategoriaDTO(categoria));
 	}
 
+	@Override
+	public Categoria fromDTO(CategoriaDTO categoriaDTO) {
+		return new Categoria(categoriaDTO.getId(), categoriaDTO.getNome());
+	}
+
 }
