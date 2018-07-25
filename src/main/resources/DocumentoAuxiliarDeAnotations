@@ -1,8 +1,6 @@
 @EmbeddedId - Anotação pra declarar um id embutido em um tipo auxiliar
 @JsonIgnore - A anotação faz com que não seja serializado o atributo que esta com essa anotação
-@JsonBackReference - A anotação faz com que o atributo que a possui não seja serializado pela classe que se encontra
 @Embeddable - A anotação serve para identificar a classe como um subtipo para o JPA
-@JsonManagedReference -  A anotação permite que o atributo que a possui seja serializado pela classe que se encontra
 Set<?> atributo = new HashSet<>(); - É utilizado a coleção Set para que seja garantido que não haverá atributos repetidos no mesmo objeto
 getMetodoX - Tudo que é começado com Get é serializado automaticamente. Quando não for necessário fazer essa serialização, deve-se anotar o método com @JsonIgnore
 @JsonFormat - A anotação realiza a formatação do atributo que a possui Ex.:@JsonFormat(pattern = "dd/MM/yyyy HH:mm")
