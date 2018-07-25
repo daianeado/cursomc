@@ -4,5 +4,5 @@ import com.cursomc.domain.Pedido;
 
 public interface PedidoService {
 
-	public Pedido buscar(Integer id);
+	public Pedido find(Integer id);
 }
