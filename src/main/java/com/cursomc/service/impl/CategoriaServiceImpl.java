@@ -43,7 +43,8 @@ public class CategoriaServiceImpl implements CategoriaService {
 
 	@Override
 	public Categoria update(Categoria categoria) {
-		find(categoria.getId());
+		Categoria novaCategoria = find(categoria.getId());
+		updateData(novaCategoria, categoria);
 		return categoriaRepository.save(categoria);
 	}
 
@@ -72,6 +73,10 @@ public class CategoriaServiceImpl implements CategoriaService {
 	@Override
 	public Categoria fromDTO(CategoriaDTO categoriaDTO) {
 		return new Categoria(categoriaDTO.getId(), categoriaDTO.getNome());
+	}
+
+	private void updateData(Categoria novaCategoria, Categoria categoria) {
+		novaCategoria.setNome(categoria.getNome());
 	}
 
 }
