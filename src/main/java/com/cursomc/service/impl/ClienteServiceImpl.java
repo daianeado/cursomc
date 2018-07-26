@@ -11,9 +11,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
+import com.cursomc.domain.Cidade;
 import com.cursomc.domain.Cliente;
+import com.cursomc.domain.Endereco;
+import com.cursomc.domain.enums.TipoCliente;
 import com.cursomc.dto.ClienteDTO;
+import com.cursomc.dto.ClienteNewDTO;
+import com.cursomc.repositories.CidadeRepository;
 import com.cursomc.repositories.ClienteRepository;
+import com.cursomc.repositories.EnderecoRepository;
 import com.cursomc.service.ClienteService;
 import com.cursomc.service.exceptions.DataIntegrityException;
 import com.cursomc.service.exceptions.ObjectNotFoundException;
@@ -22,10 +28,15 @@ import com.cursomc.service.exceptions.ObjectNotFoundException;
 public class ClienteServiceImpl implements ClienteService {
 
 	private ClienteRepository clienteRepository;
+	private CidadeRepository cidadeRepository;
+	private EnderecoRepository enderecoRepository;
 
 	@Autowired
-	public ClienteServiceImpl(ClienteRepository clienteRepository) {
+	public ClienteServiceImpl(ClienteRepository clienteRepository, CidadeRepository cidadeRepository,
+			EnderecoRepository enderecoRepository) {
 		this.clienteRepository = clienteRepository;
+		this.cidadeRepository = cidadeRepository;
+		this.enderecoRepository = enderecoRepository;
 	}
 
 	@Override
@@ -33,6 +44,14 @@ public class ClienteServiceImpl implements ClienteService {
 		Optional<Cliente> cliente = clienteRepository.findById(id);
 		return cliente.orElseThrow(() -> new ObjectNotFoundException(
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
+	}
+
+	@Override
+	public Cliente insert(Cliente cliente) {
+		cliente.setId(null);
+		cliente = clienteRepository.save(cliente);
+		enderecoRepository.saveAll(cliente.getEnderecos());
+		return cliente;
 	}
 
 	@Override
@@ -67,6 +86,27 @@ public class ClienteServiceImpl implements ClienteService {
 	@Override
 	public Cliente fromDTO(ClienteDTO clienteDTO) {
 		return new Cliente(clienteDTO.getId(), clienteDTO.getNome(), clienteDTO.getEmail(), null, null);
+	}
+
+	@Override
+	public Cliente fromDTO(ClienteNewDTO clienteNewDTO) {
+		Cliente cli = new Cliente(null, clienteNewDTO.getNome(), clienteNewDTO.getEmail(), clienteNewDTO.getCpfOuCnpj(),
+				TipoCliente.toEnum(clienteNewDTO.getTipo()));
+
+		Optional<Cidade> cidade = cidadeRepository.findById(clienteNewDTO.getCidadeId());
+
+		Endereco end = new Endereco(null, clienteNewDTO.getLogradouro(), clienteNewDTO.getNumero(),
+				clienteNewDTO.getComplemento(), clienteNewDTO.getBairro(), clienteNewDTO.getCep(), cli, cidade.get());
+		cli.getEnderecos().add(end);
+		cli.getTelefones().add(clienteNewDTO.getTelefone1());
+		if (clienteNewDTO.getTelefone2() != null) {
+			cli.getTelefones().add(clienteNewDTO.getTelefone2());
+		}
+		if (clienteNewDTO.getTelefone3() != null) {
+			cli.getTelefones().add(clienteNewDTO.getTelefone3());
+		}
+
+		return cli;
 	}
 
 	private void updateData(Cliente novoCliente, Cliente cliente) {
