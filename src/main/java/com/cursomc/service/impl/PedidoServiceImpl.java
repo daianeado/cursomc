@@ -1,13 +1,22 @@
 package com.cursomc.service.impl;
 
+import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.cursomc.domain.ItemPedido;
+import com.cursomc.domain.PagamentoComBoleto;
 import com.cursomc.domain.Pedido;
+import com.cursomc.domain.enums.EstadoPagamento;
 import com.cursomc.repositories.PedidoRepository;
+import com.cursomc.service.BoletoService;
+import com.cursomc.service.ItemPedidoService;
+import com.cursomc.service.PagamentoService;
 import com.cursomc.service.PedidoService;
+import com.cursomc.service.ProdutoService;
 import com.cursomc.service.exceptions.ObjectNotFoundException;
 
 @Service
@@ -15,9 +24,22 @@ public class PedidoServiceImpl implements PedidoService {
 
 	private PedidoRepository pedidoRepository;
 
+	private BoletoService boletoService;
+
+	private PagamentoService pagamentoService;
+
+	private ProdutoService produtoService;
+
+	private ItemPedidoService itemPedidoService;
+
 	@Autowired
-	public PedidoServiceImpl(PedidoRepository pedidoRepository) {
+	public PedidoServiceImpl(PedidoRepository pedidoRepository, BoletoService boletoService,
+			PagamentoService pagamentoService, ProdutoService produtoService, ItemPedidoService itemPedidoService) {
 		this.pedidoRepository = pedidoRepository;
+		this.boletoService = boletoService;
+		this.pagamentoService = pagamentoService;
+		this.produtoService = produtoService;
+		this.itemPedidoService = itemPedidoService;
 	}
 
 	@Override
@@ -27,10 +49,28 @@ public class PedidoServiceImpl implements PedidoService {
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Pedido.class.getName()));
 	}
 
+	@Transactional
 	@Override
 	public Pedido insert(Pedido pedido) {
-		// TODO Auto-generated method stub
-		return null;
+		pedido.setId(null);
+		pedido.setInstante(new Date());
+		pedido.getPagamento().setEstado(EstadoPagamento.PENDENTE);
+		pedido.getPagamento().setPedido(pedido);
+		if (pedido.getPagamento() instanceof PagamentoComBoleto) {
+			PagamentoComBoleto pagto = (PagamentoComBoleto) pedido.getPagamento();
+			boletoService.preencherPagamentoComBoleto(pagto, pedido.getInstante());
+		}
+		pedido = pedidoRepository.save(pedido);
+		pagamentoService.save(pedido.getPagamento());
+
+		for (ItemPedido ip : pedido.getItens()) {
+			ip.setDesconto(0.0);
+			ip.setPreco(produtoService.find(ip.getProduto().getId()).getPreco());
+			ip.setPedido(pedido);
+		}
+
+		itemPedidoService.save(pedido.getItens());
+		return pedido;
 	}
 
 }
