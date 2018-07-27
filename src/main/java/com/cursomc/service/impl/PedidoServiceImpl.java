@@ -27,4 +27,10 @@ public class PedidoServiceImpl implements PedidoService {
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Pedido.class.getName()));
 	}
 
+	@Override
+	public Pedido insert(Pedido pedido) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
