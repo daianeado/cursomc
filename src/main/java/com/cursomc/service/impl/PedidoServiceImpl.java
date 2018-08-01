@@ -14,6 +14,7 @@ import com.cursomc.domain.enums.EstadoPagamento;
 import com.cursomc.repositories.PedidoRepository;
 import com.cursomc.service.BoletoService;
 import com.cursomc.service.ClienteService;
+import com.cursomc.service.EmailService;
 import com.cursomc.service.ItemPedidoService;
 import com.cursomc.service.PagamentoService;
 import com.cursomc.service.PedidoService;
@@ -35,16 +36,19 @@ public class PedidoServiceImpl implements PedidoService {
 
 	private ClienteService clienteService;
 
+	private EmailService emailService;
+
 	@Autowired
 	public PedidoServiceImpl(PedidoRepository pedidoRepository, BoletoService boletoService,
 			PagamentoService pagamentoService, ProdutoService produtoService, ItemPedidoService itemPedidoService,
-			ClienteService clienteService) {
+			ClienteService clienteService, EmailService emailService) {
 		this.pedidoRepository = pedidoRepository;
 		this.boletoService = boletoService;
 		this.pagamentoService = pagamentoService;
 		this.produtoService = produtoService;
 		this.itemPedidoService = itemPedidoService;
 		this.clienteService = clienteService;
+		this.emailService = emailService;
 	}
 
 	@Override
@@ -77,8 +81,7 @@ public class PedidoServiceImpl implements PedidoService {
 		}
 
 		itemPedidoService.save(pedido.getItens());
-
-		System.out.println(pedido);
+		emailService.sendOrderConfirmationEmail(pedido);
 		return pedido;
 	}
 
