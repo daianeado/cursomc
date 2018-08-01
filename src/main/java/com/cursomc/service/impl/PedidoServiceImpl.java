@@ -13,6 +13,7 @@ import com.cursomc.domain.Pedido;
 import com.cursomc.domain.enums.EstadoPagamento;
 import com.cursomc.repositories.PedidoRepository;
 import com.cursomc.service.BoletoService;
+import com.cursomc.service.ClienteService;
 import com.cursomc.service.ItemPedidoService;
 import com.cursomc.service.PagamentoService;
 import com.cursomc.service.PedidoService;
@@ -32,14 +33,18 @@ public class PedidoServiceImpl implements PedidoService {
 
 	private ItemPedidoService itemPedidoService;
 
+	private ClienteService clienteService;
+
 	@Autowired
 	public PedidoServiceImpl(PedidoRepository pedidoRepository, BoletoService boletoService,
-			PagamentoService pagamentoService, ProdutoService produtoService, ItemPedidoService itemPedidoService) {
+			PagamentoService pagamentoService, ProdutoService produtoService, ItemPedidoService itemPedidoService,
+			ClienteService clienteService) {
 		this.pedidoRepository = pedidoRepository;
 		this.boletoService = boletoService;
 		this.pagamentoService = pagamentoService;
 		this.produtoService = produtoService;
 		this.itemPedidoService = itemPedidoService;
+		this.clienteService = clienteService;
 	}
 
 	@Override
@@ -54,6 +59,7 @@ public class PedidoServiceImpl implements PedidoService {
 	public Pedido insert(Pedido pedido) {
 		pedido.setId(null);
 		pedido.setInstante(new Date());
+		pedido.setCliente(clienteService.find(pedido.getCliente().getId()));
 		pedido.getPagamento().setEstado(EstadoPagamento.PENDENTE);
 		pedido.getPagamento().setPedido(pedido);
 		if (pedido.getPagamento() instanceof PagamentoComBoleto) {
@@ -65,11 +71,14 @@ public class PedidoServiceImpl implements PedidoService {
 
 		for (ItemPedido ip : pedido.getItens()) {
 			ip.setDesconto(0.0);
-			ip.setPreco(produtoService.find(ip.getProduto().getId()).getPreco());
+			ip.setProduto(produtoService.find(ip.getProduto().getId()));
+			ip.setPreco(ip.getProduto().getPreco());
 			ip.setPedido(pedido);
 		}
 
 		itemPedidoService.save(pedido.getItens());
+
+		System.out.println(pedido);
 		return pedido;
 	}
 
