@@ -116,4 +116,9 @@ public class ClienteServiceImpl implements ClienteService {
 		novoCliente.setNome(cliente.getNome());
 		novoCliente.setEmail(cliente.getEmail());
 	}
+
+	@Override
+	public Cliente findByEmail(String email) {
+		return clienteRepository.findByEmail(email);
+	}
 }

@@ -25,5 +25,7 @@ public interface ClienteService {
 	public Cliente fromDTO(ClienteDTO clienteDTO);
 	
 	public Cliente fromDTO(ClienteNewDTO clientenewDTO);
+	
+	public Cliente findByEmail(String email);
 
 }
