@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.cursomc.domain.Cidade;
@@ -27,16 +28,18 @@ import com.cursomc.service.exceptions.ObjectNotFoundException;
 @Service
 public class ClienteServiceImpl implements ClienteService {
 
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	private ClienteRepository clienteRepository;
 	private CidadeRepository cidadeRepository;
 	private EnderecoRepository enderecoRepository;
 
 	@Autowired
 	public ClienteServiceImpl(ClienteRepository clienteRepository, CidadeRepository cidadeRepository,
-			EnderecoRepository enderecoRepository) {
+			EnderecoRepository enderecoRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
 		this.clienteRepository = clienteRepository;
 		this.cidadeRepository = cidadeRepository;
 		this.enderecoRepository = enderecoRepository;
+		this.bCryptPasswordEncoder = bCryptPasswordEncoder;
 	}
 
 	@Override
@@ -85,13 +88,13 @@ public class ClienteServiceImpl implements ClienteService {
 
 	@Override
 	public Cliente fromDTO(ClienteDTO clienteDTO) {
-		return new Cliente(clienteDTO.getId(), clienteDTO.getNome(), clienteDTO.getEmail(), null, null);
+		return new Cliente(clienteDTO.getId(), clienteDTO.getNome(), clienteDTO.getEmail(), null, null, null);
 	}
 
 	@Override
 	public Cliente fromDTO(ClienteNewDTO clienteNewDTO) {
 		Cliente cli = new Cliente(null, clienteNewDTO.getNome(), clienteNewDTO.getEmail(), clienteNewDTO.getCpfOuCnpj(),
-				TipoCliente.toEnum(clienteNewDTO.getTipo()));
+				TipoCliente.toEnum(clienteNewDTO.getTipo()),bCryptPasswordEncoder.encode(clienteNewDTO.getSenha()));
 
 		Optional<Cidade> cidade = cidadeRepository.findById(clienteNewDTO.getCidadeId());
 
