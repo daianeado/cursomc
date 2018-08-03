@@ -24,8 +24,8 @@ public abstract class AbstractEmailServiceImpl implements EmailService {
 	@Autowired
 	private TemplateEngine templateEngine;
 
-	@Autowired
-	private JavaMailSender javaMailSender;
+//	@Autowired
+//	private JavaMailSender javaMailSender;
 
 	@Override
 	public void sendOrderConfirmationEmail(Pedido pedido) {
@@ -61,14 +61,15 @@ public abstract class AbstractEmailServiceImpl implements EmailService {
 	}
 
 	protected MimeMessage prepareMimeMessageFromPedido(Pedido pedido) throws MessagingException {
-		MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-		MimeMessageHelper mmh = new MimeMessageHelper(mimeMessage, true);
-
-		mmh.setTo(pedido.getCliente().getEmail());
-		mmh.setFrom(sender);
-		mmh.setSubject("Pedido confirmado! Código: " + pedido.getId());
-		mmh.setSentDate(new Date(System.currentTimeMillis()));
-		mmh.setText(htmlFromTemplatePedido(pedido), true);
-		return mimeMessage;
+//		MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+//		MimeMessageHelper mmh = new MimeMessageHelper(mimeMessage, true);
+//
+//		mmh.setTo(pedido.getCliente().getEmail());
+//		mmh.setFrom(sender);
+//		mmh.setSubject("Pedido confirmado! Código: " + pedido.getId());
+//		mmh.setSentDate(new Date(System.currentTimeMillis()));
+//		mmh.setText(htmlFromTemplatePedido(pedido), true);
+//		return mimeMessage;
+		return null;
 	}
 }
