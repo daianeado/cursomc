@@ -1,5 +1,6 @@
 package com.cursomc.service;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Page;
 import com.cursomc.domain.Cliente;
 import com.cursomc.dto.ClienteDTO;
 import com.cursomc.dto.ClienteNewDTO;
+import com.cursomc.relatorios.ExportacaoException;
 
 public interface ClienteService {
 	
@@ -27,5 +29,9 @@ public interface ClienteService {
 	public Cliente fromDTO(ClienteNewDTO clientenewDTO);
 	
 	public Cliente findByEmail(String email);
+	
+	public ByteArrayOutputStream exportClient(String tipo) throws ExportacaoException;
+	
+	public Page<Cliente> findAllForReport(Integer page, Integer linesPerPage, String orderBy, String direction);
 
 }

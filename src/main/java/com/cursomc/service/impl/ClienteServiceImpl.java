@@ -1,5 +1,6 @@
 package com.cursomc.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,6 +20,11 @@ import com.cursomc.domain.enums.Perfil;
 import com.cursomc.domain.enums.TipoCliente;
 import com.cursomc.dto.ClienteDTO;
 import com.cursomc.dto.ClienteNewDTO;
+import com.cursomc.dto.ClienteReportDTO;
+import com.cursomc.relatorios.ClienteColunas;
+import com.cursomc.relatorios.ColunasPropriedadeRelatorio;
+import com.cursomc.relatorios.DynamicReportsUtil;
+import com.cursomc.relatorios.ExportacaoException;
 import com.cursomc.repositories.CidadeRepository;
 import com.cursomc.repositories.ClienteRepository;
 import com.cursomc.repositories.EnderecoRepository;
@@ -27,6 +33,8 @@ import com.cursomc.service.ClienteService;
 import com.cursomc.service.exceptions.AuthorizationException;
 import com.cursomc.service.exceptions.DataIntegrityException;
 import com.cursomc.service.exceptions.ObjectNotFoundException;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 
 @Service
 public class ClienteServiceImpl implements ClienteService {
@@ -48,11 +56,11 @@ public class ClienteServiceImpl implements ClienteService {
 	@Override
 	public Cliente find(Integer id) {
 		UserSS user = UserServiceImpl.authenticated();
-		
-		if(user == null || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())) {
+
+		if (user == null || !user.hasRole(Perfil.ADMIN) && !id.equals(user.getId())) {
 			throw new AuthorizationException("Acesso negado");
 		}
-		
+
 		Optional<Cliente> cliente = clienteRepository.findById(id);
 		return cliente.orElseThrow(() -> new ObjectNotFoundException(
 				"Objeto não encontrado! Id: " + id + ", Tipo: " + Cliente.class.getName()));
@@ -103,7 +111,7 @@ public class ClienteServiceImpl implements ClienteService {
 	@Override
 	public Cliente fromDTO(ClienteNewDTO clienteNewDTO) {
 		Cliente cli = new Cliente(null, clienteNewDTO.getNome(), clienteNewDTO.getEmail(), clienteNewDTO.getCpfOuCnpj(),
-				TipoCliente.toEnum(clienteNewDTO.getTipo()),bCryptPasswordEncoder.encode(clienteNewDTO.getSenha()));
+				TipoCliente.toEnum(clienteNewDTO.getTipo()), bCryptPasswordEncoder.encode(clienteNewDTO.getSenha()));
 
 		Optional<Cidade> cidade = cidadeRepository.findById(clienteNewDTO.getCidadeId());
 
@@ -129,5 +137,24 @@ public class ClienteServiceImpl implements ClienteService {
 	@Override
 	public Cliente findByEmail(String email) {
 		return clienteRepository.findByEmail(email);
+	}
+
+	/** EXPORTAÇÃO */
+	@Override
+	public ByteArrayOutputStream exportClient(String tipo) throws ExportacaoException {
+		Page<ClienteReportDTO> result = findAllForReport(0, 24, "nome", "ASC").map(cliente -> new ClienteReportDTO(cliente));
+		return export(result, "Lista de Clientes", new ClienteColunas().getParametros(), tipo);
+	}
+
+	private ByteArrayOutputStream export(Page<ClienteReportDTO> page, String titulo, List<ColunasPropriedadeRelatorio> propriedades,
+			String tipo) throws ExportacaoException {
+		JasperReportBuilder dr = DynamicReportsUtil.getExportacao(titulo, propriedades, null, tipo);
+		return DynamicReportsUtil.getReportStream(dr, page.getContent(), tipo);
+	}
+
+	@Override
+	public Page<Cliente> findAllForReport(Integer page, Integer linesPerPage, String orderBy, String direction) {
+		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
+		return clienteRepository.findAll(pageRequest);
 	}
 }
