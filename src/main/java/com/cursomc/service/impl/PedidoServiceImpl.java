@@ -1,7 +1,10 @@
 package com.cursomc.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +18,11 @@ import com.cursomc.domain.ItemPedido;
 import com.cursomc.domain.PagamentoComBoleto;
 import com.cursomc.domain.Pedido;
 import com.cursomc.domain.enums.EstadoPagamento;
+import com.cursomc.dto.PedidoReportDTO;
+import com.cursomc.relatorios.ColunasPropriedadeRelatorio;
+import com.cursomc.relatorios.DynamicReportsUtil;
+import com.cursomc.relatorios.ExportacaoException;
+import com.cursomc.relatorios.PedidoColunas;
 import com.cursomc.repositories.PedidoRepository;
 import com.cursomc.security.UserSS;
 import com.cursomc.service.BoletoService;
@@ -26,6 +34,8 @@ import com.cursomc.service.PedidoService;
 import com.cursomc.service.ProdutoService;
 import com.cursomc.service.exceptions.AuthorizationException;
 import com.cursomc.service.exceptions.ObjectNotFoundException;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -93,15 +103,38 @@ public class PedidoServiceImpl implements PedidoService {
 
 	@Override
 	public Page<Pedido> findPage(Integer page, Integer linesPerPage, String orderBy, String direction) {
-		
+
 		UserSS user = UserServiceImpl.authenticated();
-		
-		if(user == null) {
+
+		if (user == null) {
 			throw new AuthorizationException("Acesso negado!");
 		}
 		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
 		Cliente cliente = clienteService.find(user.getId());
 		return pedidoRepository.findByCliente(cliente, pageRequest);
+	}
+
+	@Override
+	public List<PedidoReportDTO> findAll() {
+		return pedidoRepository.findAll().stream().map(pedido -> new PedidoReportDTO(pedido))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public ByteArrayOutputStream exportClient(String tipo) throws ExportacaoException {
+		Page<PedidoReportDTO> result = findAllForReport(0, 24, "id", "ASC").map(pedido -> new PedidoReportDTO(pedido));
+		return export(result, "Lista de Pedidos", new PedidoColunas().getParametros(), tipo);
+	}
+
+	private ByteArrayOutputStream export(Page<PedidoReportDTO> page, String titulo,
+			List<ColunasPropriedadeRelatorio> propriedades, String tipo) throws ExportacaoException {
+		JasperReportBuilder dr = DynamicReportsUtil.getExportacao(titulo, propriedades, null, tipo);
+		return DynamicReportsUtil.getReportStream(dr, page.getContent(), tipo);
+	}
+
+	private Page<Pedido> findAllForReport(Integer page, Integer linesPerPage, String orderBy, String direction) {
+		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
+		return pedidoRepository.findAll(pageRequest);
 	}
 
 }
