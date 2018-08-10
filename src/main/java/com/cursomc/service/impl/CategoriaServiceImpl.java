@@ -1,5 +1,6 @@
 package com.cursomc.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -13,10 +14,16 @@ import org.springframework.stereotype.Service;
 
 import com.cursomc.domain.Categoria;
 import com.cursomc.dto.CategoriaDTO;
+import com.cursomc.relatorios.CategoriaColunas;
+import com.cursomc.relatorios.ColunasPropriedadeRelatorio;
+import com.cursomc.relatorios.DynamicReportsUtil;
+import com.cursomc.relatorios.ExportacaoException;
 import com.cursomc.repositories.CategoriaRepository;
 import com.cursomc.service.CategoriaService;
 import com.cursomc.service.exceptions.DataIntegrityException;
 import com.cursomc.service.exceptions.ObjectNotFoundException;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 
 @Service
 public class CategoriaServiceImpl implements CategoriaService {
@@ -77,6 +84,23 @@ public class CategoriaServiceImpl implements CategoriaService {
 
 	private void updateData(Categoria novaCategoria, Categoria categoria) {
 		novaCategoria.setNome(categoria.getNome());
+	}
+
+	@Override
+	public ByteArrayOutputStream exportClient(String tipo) throws ExportacaoException {
+		Page<CategoriaDTO> result = findAllForReport(0, 24, "id", "ASC").map(categoria -> new CategoriaDTO(categoria));
+		return export(result, "Lista de Categorias", new CategoriaColunas().getParametros(), tipo);
+	}
+
+	private ByteArrayOutputStream export(Page<CategoriaDTO> page, String titulo, List<ColunasPropriedadeRelatorio> propriedades,
+			String tipo) throws ExportacaoException {
+		JasperReportBuilder dr = DynamicReportsUtil.getExportacao(titulo, propriedades, null, tipo);
+		return DynamicReportsUtil.getReportStream(dr, page.getContent(), tipo);
+	}
+	
+	private Page<Categoria> findAllForReport(Integer page, Integer linesPerPage, String orderBy, String direction) {
+		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
+		return categoriaRepository.findAll(pageRequest);
 	}
 
 }

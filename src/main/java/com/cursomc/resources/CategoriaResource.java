@@ -1,12 +1,17 @@
 package com.cursomc.resources;
 
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.util.List;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +24,16 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.cursomc.domain.Categoria;
 import com.cursomc.dto.CategoriaDTO;
+import com.cursomc.relatorios.ExportacaoException;
+import com.cursomc.relatorios.GenerateReportsUtil;
+import com.cursomc.relatorios.RelatorioConstantes;
 import com.cursomc.service.CategoriaService;
 
 @RestController
 @RequestMapping(value = "/categorias")
 public class CategoriaResource {
+	
+	private final Logger log = LoggerFactory.getLogger(ClienteResource.class);
 
 	private CategoriaService categoriaService;
 
@@ -38,7 +48,7 @@ public class CategoriaResource {
 		return ResponseEntity.ok().body(categoria);
 	}
 
-	@PreAuthorize("hasAnyRole('ADMIN')")
+//	@PreAuthorize("hasAnyRole('ADMIN')")
 	@RequestMapping(method = RequestMethod.POST)
 	public ResponseEntity<Void> insert(@Valid @RequestBody CategoriaDTO categoriaDTO) {
 		Categoria categoria = categoriaService.fromDTO(categoriaDTO);
@@ -77,5 +87,12 @@ public class CategoriaResource {
 			@RequestParam(value = "direction", defaultValue = "ASC") String direction) {
 		Page<CategoriaDTO> listCategoria = categoriaService.findPage(page, linesPerPage, orderBy, direction);
 		return ResponseEntity.ok().body(listCategoria);
+	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+	public ResponseEntity<InputStreamResource> getPDF() throws ExportacaoException {
+		log.debug("REST request to get Categorias pdf : {}");
+		ByteArrayOutputStream byteArrayOutputStream = this.categoriaService.exportClient(RelatorioConstantes.PDF);
+		return GenerateReportsUtil.output(byteArrayOutputStream, "categorias.pdf");
 	}
 }
