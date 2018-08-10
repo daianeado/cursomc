@@ -39,7 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	//TODO verificar depois de implementar interface de login
 	private static final String[] PUBLIC_MATCHERS = { "/h2-console/**", "/pedidos/**" };
-	private static final String[] PUBLIC_MATCHERS_GET = { "/pedidos/**","/produtos/**","/clientes/**", "/categorias/**" };
+	private static final String[] PUBLIC_MATCHERS_GET = { "/cidades/**", "/pedidos/**","/produtos/**","/clientes/**", "/categorias/**" };
 	private static final String[] PUBLIC_MATCHERS_POST = { "/pedidos/**", "/produtos/**", "/clientes/**", "/auth/forgot/**", "/categorias/**" };
 
 	@Override
